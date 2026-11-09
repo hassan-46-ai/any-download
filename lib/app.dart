@@ -1,6 +1,6 @@
-import 'package:youtube_downloader/features/splash/splash_page.dart';
 import 'package:flutter/material.dart';
 import 'package:youtube_downloader/core/theme/app_theme.dart';
+import 'package:youtube_downloader/features/splash/splash_page.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -9,7 +9,7 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'YouTube Downloader',
+      title: 'Media Saver',
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: ThemeMode.system,

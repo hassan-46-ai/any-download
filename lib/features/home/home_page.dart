@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:youtube_downloader/core/theme/app_theme.dart';
 import 'package:youtube_downloader/core/utils/error_messages.dart';
 import 'package:youtube_downloader/core/widgets/error_view.dart';
 import 'package:youtube_downloader/core/widgets/video_card.dart';
+import 'package:youtube_downloader/features/download/media_details_page.dart';
 import 'package:youtube_downloader/features/home/home_providers.dart';
 import 'package:youtube_downloader/features/home/widgets/category_bar.dart';
-import 'package:youtube_downloader/features/video/video_details_page.dart';
+import 'package:youtube_downloader/features/search/search_page.dart';
 
 class HomePage extends ConsumerWidget {
-  const HomePage({super.key, required this.onSearchTap});
-
-  final VoidCallback onSearchTap;
+  const HomePage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -29,31 +29,7 @@ class HomePage extends ConsumerWidget {
         },
         child: CustomScrollView(
           slivers: [
-            SliverAppBar(
-              floating: true,
-              snap: true,
-              title: Row(
-                children: [
-                  Icon(
-                    Icons.download_for_offline,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  const Text('YouTube Downloader'),
-                ],
-              ),
-              actions: [
-                IconButton(
-                  tooltip: 'Search',
-                  icon: const Icon(Icons.search),
-                  onPressed: onSearchTap,
-                ),
-              ],
-              bottom: const PreferredSize(
-                preferredSize: Size.fromHeight(CategoryBar.height),
-                child: CategoryBar(),
-              ),
-            ),
+            const SliverToBoxAdapter(child: _Header()),
             ...feed.when(
               data: (videos) => [
                 if (videos.isEmpty)
@@ -89,6 +65,74 @@ class HomePage extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _Header extends StatelessWidget {
+  const _Header();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final topPadding = MediaQuery.paddingOf(context).top;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.fromLTRB(20, topPadding + 20, 20, 4),
+          child: ShaderMask(
+            shaderCallback: (bounds) => AppColors.gradient.createShader(bounds),
+            child: Text(
+              'Save anything',
+              style: theme.textTheme.headlineMedium?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'YouTube, Facebook, Instagram, TikTok, X and more',
+            style: TextStyle(color: scheme.onSurfaceVariant),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+          child: Material(
+            color: scheme.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(20),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(20),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const SearchPage()),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.search, color: scheme.onSurfaceVariant),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Search videos',
+                      style: TextStyle(color: scheme.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        const CategoryBar(),
+        const SizedBox(height: 16),
+      ],
     );
   }
 }

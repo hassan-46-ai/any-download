@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:youtube_downloader/core/providers.dart';
+import 'package:youtube_downloader/core/theme/app_theme.dart';
 import 'package:youtube_downloader/features/shell/main_shell.dart';
 
-class SplashPage extends StatefulWidget {
+class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
 
   @override
-  State<SplashPage> createState() => _SplashPageState();
+  ConsumerState<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState extends State<SplashPage>
+class _SplashPageState extends ConsumerState<SplashPage>
     with SingleTickerProviderStateMixin {
-  static const _background = Color(0xFF59C4E5);
-
   late final AnimationController _controller = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1200),
@@ -30,6 +31,8 @@ class _SplashPageState extends State<SplashPage>
   @override
   void initState() {
     super.initState();
+    // Start the download engine while the splash is visible.
+    ref.read(ytDlpServiceProvider).warmUp();
     Future<void>.delayed(const Duration(milliseconds: 2000), _goHome);
   }
 
@@ -54,42 +57,35 @@ class _SplashPageState extends State<SplashPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _background,
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ScaleTransition(
-              scale: _scale,
-              child: const Icon(
-                Icons.download_for_offline,
-                size: 110,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 24),
-            FadeTransition(
-              opacity: _fade,
-              child: const Text(
-                'YouTube Downloader',
-                style: TextStyle(
+      body: Container(
+        decoration: const BoxDecoration(gradient: AppColors.gradient),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ScaleTransition(
+                scale: _scale,
+                child: const Icon(
+                  Icons.download_for_offline_rounded,
+                  size: 110,
                   color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.5,
                 ),
               ),
-            ),
-            const SizedBox(height: 40),
-            const SizedBox(
-              width: 28,
-              height: 28,
-              child: CircularProgressIndicator(
-                strokeWidth: 3,
-                color: Colors.white,
+              const SizedBox(height: 24),
+              FadeTransition(
+                opacity: _fade,
+                child: const Text(
+                  'Media Saver',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.5,
+                  ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

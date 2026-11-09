@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 /// Categories shown as chips on the home page. Each one maps to a search.
 enum FeedCategory {
   trending('Trending', 'trending videos', Icons.local_fire_department_outlined),
+  shorts('Shorts', 'shorts', Icons.bolt_outlined),
   music('Music', 'music videos', Icons.music_note_outlined),
   gaming('Gaming', 'gaming', Icons.sports_esports_outlined),
   news('News', 'news today', Icons.newspaper_outlined),

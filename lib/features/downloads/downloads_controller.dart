@@ -2,17 +2,12 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:youtube_downloader/core/providers.dart';
 import 'package:youtube_downloader/core/utils/error_messages.dart';
 import 'package:youtube_downloader/core/utils/formatters.dart';
+import 'package:youtube_downloader/core/utils/mime.dart';
 import 'package:youtube_downloader/domain/download_task.dart';
-import 'package:youtube_downloader/domain/stream_option.dart';
-import 'package:youtube_downloader/domain/video_item.dart';
-
-class _DownloadCanceled implements Exception {
-  const _DownloadCanceled();
-}
+import 'package:youtube_downloader/domain/media_info.dart';
 
 /// Owns every download: starts them, reports progress and keeps the history.
 class DownloadsController extends Notifier<List<DownloadTask>> {
@@ -21,20 +16,34 @@ class DownloadsController extends Notifier<List<DownloadTask>> {
   @override
   List<DownloadTask> build() => ref.read(downloadsStoreProvider).load();
 
-  void start(VideoItem video, StreamOption option) {
+  void start(MediaInfo media, QualityOption option) {
     final task = DownloadTask(
       id: DateTime.now().microsecondsSinceEpoch.toString(),
-      video: video,
+      url: media.url,
+      title: media.title,
+      author: media.author,
+      platform: media.platform,
+      thumbnailUrl: media.thumbnailUrl,
       optionLabel: option.label,
-      fileName: '${sanitizeFileName(video.title)}.${option.extension}',
-      mimeType: option.mimeType,
+      formatSelector: option.formatSelector,
+      audioOnly: option.audioOnly,
       createdAt: DateTime.now(),
     );
     state = [task, ...state];
-    unawaited(_run(task, option));
+    unawaited(_run(task));
   }
 
-  void cancel(String id) => _cancelRequests.add(id);
+  void retry(String id) {
+    final task = state.firstWhere((t) => t.id == id);
+    final fresh = task.restarted();
+    _update(id, (_) => fresh);
+    unawaited(_run(fresh));
+  }
+
+  void cancel(String id) {
+    _cancelRequests.add(id);
+    unawaited(ref.read(ytDlpServiceProvider).cancel(id));
+  }
 
   void remove(String id) {
     state = state.where((t) => t.id != id).toList();
@@ -46,73 +55,69 @@ class DownloadsController extends Notifier<List<DownloadTask>> {
     _persist();
   }
 
-  Future<void> _run(DownloadTask task, StreamOption option) async {
-    final repository = ref.read(youtubeRepositoryProvider);
+  Future<void> _run(DownloadTask task) async {
+    final service = ref.read(ytDlpServiceProvider);
     final storage = ref.read(nativeStorageProvider);
-    File? tempFile;
-    IOSink? sink;
+    File? output;
+
+    final progressSub = service.progress
+        .where((p) => p.taskId == task.id && p.percent >= 0)
+        .listen((p) {
+      _update(
+        task.id,
+        (t) => t.copyWith(
+          progress: (p.percent / 100).clamp(0.0, 1.0),
+          etaSeconds: p.etaSeconds,
+        ),
+      );
+    });
 
     try {
       _update(task.id, (t) => t.copyWith(status: DownloadStatus.downloading));
 
-      final dir = await getTemporaryDirectory();
-      tempFile = File('${dir.path}/${task.id}.part');
-      sink = tempFile.openWrite();
-
-      final total = option.sizeBytes;
-      var received = 0;
-      var lastReported = 0.0;
-
-      await for (final chunk in repository.openStream(option)) {
-        if (_cancelRequests.remove(task.id)) throw const _DownloadCanceled();
-        sink.add(chunk);
-        received += chunk.length;
-        if (total > 0) {
-          final progress = (received / total).clamp(0.0, 1.0);
-          if (progress - lastReported >= 0.01) {
-            lastReported = progress;
-            _update(task.id, (t) => t.copyWith(progress: progress));
-          }
-        }
-      }
-
-      await sink.flush();
-      await sink.close();
-      sink = null;
+      final file = await service.download(
+        taskId: task.id,
+        url: task.url,
+        formatSelector: task.formatSelector,
+        audioOnly: task.audioOnly,
+      );
+      output = File(file.path);
 
       _update(
         task.id,
         (t) => t.copyWith(status: DownloadStatus.saving, progress: 1),
       );
+      final mime = mimeForExtension(file.extension);
       final uri = await storage.saveToDownloads(
-        sourcePath: tempFile.path,
-        fileName: task.fileName,
-        mimeType: task.mimeType,
+        sourcePath: file.path,
+        fileName: '${sanitizeFileName(task.title)}.${file.extension}',
+        mimeType: mime,
       );
-      _update(
-        task.id,
-        (t) => t.copyWith(status: DownloadStatus.completed, savedUri: uri),
-      );
-    } on _DownloadCanceled {
-      _update(task.id, (t) => t.copyWith(status: DownloadStatus.canceled));
-    } catch (error) {
       _update(
         task.id,
         (t) => t.copyWith(
-          status: DownloadStatus.failed,
-          error: describeError(error),
+          status: DownloadStatus.completed,
+          savedUri: uri,
+          mimeType: mime,
+        ),
+      );
+    } catch (error) {
+      final canceled = _cancelRequests.contains(task.id);
+      _update(
+        task.id,
+        (t) => t.copyWith(
+          status: canceled ? DownloadStatus.canceled : DownloadStatus.failed,
+          error: canceled ? null : describeError(error),
         ),
       );
     } finally {
+      await progressSub.cancel();
+      _cancelRequests.remove(task.id);
       try {
-        await sink?.close();
-        if (tempFile != null && await tempFile.exists()) {
-          await tempFile.delete();
-        }
+        if (output != null && await output.exists()) await output.delete();
       } catch (_) {
         // Temp-file cleanup is best effort.
       }
-      _cancelRequests.remove(task.id);
       _persist();
     }
   }

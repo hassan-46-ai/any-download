@@ -1,36 +1,33 @@
-# What changed
+# Media Saver 2.0
 
-## Fixed
-- Downloads now work: files are saved through Android MediaStore into
-  Downloads/YouTube Downloader (no storage permission, works on Android 10 - 16).
-- INTERNET permission added to the main manifest (release builds had no network).
-- Removed the MANAGE_EXTERNAL_STORAGE / READ / WRITE storage permissions.
-- Removed the old youtube_player_flutter player screen (it only played videos).
-- Removed hard-coded sample data; the home feed is now live.
+## Engine
+Downloads now run on yt-dlp (youtubedl-android 0.18.1) bundled in the app.
+Supports YouTube, YouTube Shorts, Facebook, Instagram, TikTok, X (Twitter) and ~1000 other sites,
+with merged HD video (ffmpeg) and audio-only (M4A).
+The old YouTube-only engine is only used for the home feed / search.
 
-## New
-- Home feed with category chips (Trending, Music, Gaming, News, Sports, Learning, Movies) + pull to refresh
-- Search page
-- Paste-link page with clipboard button, link validation and preview
-- Video page with a quality / format picker (video + sound, audio only M4A/WebM)
-- Downloads page: live progress, cancel, tap to open, retry, history that survives restarts
-- Badge on the Downloads tab showing how many downloads are running
-- Light / dark theme following the system, Material 3, predictive back
+## Design
+New violet/pink Material 3 design, 3 tabs (Home, Download, Library), rounded cards,
+gradient buttons, animated splash.
 
-## Structure
-lib/
-  core/      theme, formatters, shared widgets, providers
-  data/      YoutubeRepository, NativeStorage (MediaStore), DownloadsStore
-  domain/    plain models (VideoItem, StreamOption, DownloadTask, FeedCategory)
-  features/  home, search, link, video, downloads, shell
+## Files to copy over your project
+lib/                      (delete your old lib/ first)
+pubspec.yaml, analysis_options.yaml
+android/app/build.gradle.kts
+android/app/src/main/AndroidManifest.xml
+android/app/src/main/kotlin/com/example/youtube_downloader/MainActivity.kt
+android/app/src/main/kotlin/com/example/youtube_downloader/YtDlpBridge.kt
+android/settings.gradle.kts
+android/gradle/wrapper/gradle-wrapper.properties
 
-## Where the files go
-Copy lib/ and pubspec.yaml + analysis_options.yaml over your project, then:
-  android/app/src/main/AndroidManifest.xml
-  android/app/build.gradle.kts
-  android/settings.gradle.kts
-  android/gradle/wrapper/gradle-wrapper.properties
-  android/app/src/main/kotlin/com/example/youtube_downloader/MainActivity.kt
-(delete any old MainActivity.kt / MainActivity.java so there is only one)
-Then delete the old files in lib/ (data.dart, main_page.dart, home_page.dart,
-download_screen.dart, video_screen.dart, widgits/).
+Then:
+  flutter clean
+  flutter pub get
+  dart run flutter_native_splash:create
+  flutter run          (first launch unpacks python: takes a few seconds)
+Release: flutter build apk --split-per-abi   (the engine makes a full APK ~100 MB+)
+
+## Notes
+- When a site stops working: Download tab > update icon (downloads the newest yt-dlp).
+- Private / login-only videos (many Instagram & Facebook posts) can't be downloaded.
+- youtubedl-android is GPL-3.0: distributing the app means releasing its source under GPL.

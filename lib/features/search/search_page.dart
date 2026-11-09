@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:youtube_downloader/core/utils/error_messages.dart';
 import 'package:youtube_downloader/core/widgets/error_view.dart';
 import 'package:youtube_downloader/core/widgets/video_card.dart';
+import 'package:youtube_downloader/features/download/media_details_page.dart';
 import 'package:youtube_downloader/features/search/search_providers.dart';
-import 'package:youtube_downloader/features/video/video_details_page.dart';
 
 class SearchPage extends ConsumerStatefulWidget {
   const SearchPage({super.key});
@@ -34,12 +34,12 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       appBar: AppBar(
         title: TextField(
           controller: _controller,
+          autofocus: true,
           textInputAction: TextInputAction.search,
           decoration: InputDecoration(
-            hintText: 'Search YouTube',
+            hintText: 'Search videos',
+            filled: false,
             border: InputBorder.none,
-            enabledBorder: InputBorder.none,
-            focusedBorder: InputBorder.none,
             suffixIcon: _controller.text.isEmpty
                 ? null
                 : IconButton(icon: const Icon(Icons.clear), onPressed: _clear),
@@ -72,6 +72,7 @@ class _Results extends ConsumerWidget {
       data: (videos) => videos.isEmpty
           ? const Center(child: Text('No results.'))
           : ListView.builder(
+              padding: const EdgeInsets.only(top: 8),
               itemCount: videos.length,
               itemBuilder: (_, i) => VideoCard(
                 video: videos[i],

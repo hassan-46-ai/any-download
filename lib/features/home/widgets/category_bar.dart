@@ -6,18 +6,16 @@ import 'package:youtube_downloader/features/home/home_providers.dart';
 class CategoryBar extends ConsumerWidget {
   const CategoryBar({super.key});
 
-  static const height = 56.0;
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selected = ref.watch(selectedCategoryProvider);
     const categories = FeedCategory.values;
 
     return SizedBox(
-      height: height,
+      height: 48,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         itemCount: categories.length,
         separatorBuilder: (_, __) => const SizedBox(width: 8),
         itemBuilder: (_, i) {

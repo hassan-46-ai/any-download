@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:youtube_downloader/features/download/download_page.dart';
 import 'package:youtube_downloader/features/downloads/downloads_controller.dart';
 import 'package:youtube_downloader/features/downloads/downloads_page.dart';
 import 'package:youtube_downloader/features/home/home_page.dart';
-import 'package:youtube_downloader/features/link/paste_link_page.dart';
-import 'package:youtube_downloader/features/search/search_page.dart';
 import 'package:youtube_downloader/features/shell/shell_providers.dart';
 
 class MainShell extends ConsumerWidget {
@@ -28,12 +27,7 @@ class MainShell extends ConsumerWidget {
       child: Scaffold(
         body: IndexedStack(
           index: index,
-          children: [
-            HomePage(onSearchTap: () => shell.select(ShellIndex.search)),
-            const SearchPage(),
-            const PasteLinkPage(),
-            const DownloadsPage(),
-          ],
+          children: const [HomePage(), DownloadPage(), DownloadsPage()],
         ),
         bottomNavigationBar: NavigationBar(
           selectedIndex: index,
@@ -41,25 +35,22 @@ class MainShell extends ConsumerWidget {
           destinations: [
             const NavigationDestination(
               icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home),
+              selectedIcon: Icon(Icons.home_rounded),
               label: 'Home',
             ),
             const NavigationDestination(
-              icon: Icon(Icons.search),
-              label: 'Search',
-            ),
-            const NavigationDestination(
-              icon: Icon(Icons.link),
-              label: 'Paste link',
+              icon: Icon(Icons.add_link),
+              selectedIcon: Icon(Icons.add_link),
+              label: 'Download',
             ),
             NavigationDestination(
               icon: Badge(
                 isLabelVisible: activeDownloads > 0,
                 label: Text('$activeDownloads'),
-                child: const Icon(Icons.download_outlined),
+                child: const Icon(Icons.video_library_outlined),
               ),
-              selectedIcon: const Icon(Icons.download),
-              label: 'Downloads',
+              selectedIcon: const Icon(Icons.video_library),
+              label: 'Library',
             ),
           ],
         ),
