@@ -1,0 +1,39 @@
+name: youtube_downloader
+description: "Browse, search and download YouTube videos and audio."
+publish_to: 'none'
+version: 1.1.0+2
+
+environment:
+  sdk: ^3.7.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  flutter_riverpod: ^2.6.1
+  youtube_explode_dart: ^3.0.0
+  path_provider: ^2.1.5
+  shared_preferences: ^2.5.3
+  cached_network_image: ^3.4.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  flutter_native_splash: ^2.4.0
+  flutter_launcher_icons:
+
+flutter_icons:
+  android:true 
+  ios:true
+  image_path:"assets/splash/logo.png"
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/splash/logo.png
+
+flutter_native_splash:
+  color: "#E53935"
+  color_dark: "#E53935"
+  android_12:
+    color: "#E53935"

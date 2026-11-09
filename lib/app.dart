@@ -1,0 +1,19 @@
+import 'package:youtube_downloader/features/splash/splash_page.dart';
+import 'package:flutter/material.dart';
+import 'package:youtube_downloader/core/theme/app_theme.dart';
+
+class App extends StatelessWidget {
+  const App({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'YouTube Downloader',
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      themeMode: ThemeMode.system,
+      home: const SplashPage(),
+    );
+  }
+}
